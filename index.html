@@ -13,13 +13,13 @@
   <script>
     const SUPABASE_URL = 'https://ghwsrqzarxuqfajugdta.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdod3NycXphcnh1cWZhanVnZHRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczOTY0OTQsImV4cCI6MjA1Mjk3MjQ5NH0.PqMcKZ1_KMpjH4cPYxMkGqD0mFmQ6pBfdZUQCTXxXBM';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let currentUser = null;
 
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
+      const { data, error } = await db.from('users').select('*').eq('email', email).single();
       if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
       currentUser = data;
       renderHome();
@@ -32,8 +32,8 @@
     }
 
     async function renderHome() {
-      const { data: items } = await supabase.from('catalog_items').select('*, categories(name)').eq('is_active', true).limit(6);
-      const { data: categories } = await supabase.from('categories').select('*').eq('is_active', true);
+      const { data: items } = await db.from('catalog_items').select('*, categories(name)').eq('is_active', true).limit(6);
+      const { data: categories } = await db.from('categories').select('*').eq('is_active', true);
       let catHtml = '';
       (categories || []).forEach(function(cat) { catHtml += '<div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer"><span class="material-icons text-purple-600 text-3xl mb-2">' + (cat.icon || 'category') + '</span><h3 class="font-semibold text-gray-800">' + cat.name + '</h3><p class="text-sm text-gray-500 mt-1">' + (cat.description || '') + '</p></div>'; });
       let itemsHtml = '';
