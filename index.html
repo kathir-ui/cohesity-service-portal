@@ -20,74 +20,7 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const { data, error } = await db.from('users').select('*').eq('email', email).single();
-<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cohesity Service Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-  <body class="bg-gray-50 min-h-screen">
-      <div id="app"></div>div>
-      <script>
-            const SUPABASE_URL = 'https://ghwsrqzarxuqfajugdta.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_7WwLwZAfl8H1FEkD3TJ-9A_3sbt7J4h';
-            const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            let currentUser = null;
-
-            async function login() {
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    const { data, error } = await db.from('users').select('*').eq('email', email).single();
-                    if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
-                    currentUser = data;
-                    renderHome();
-            }
-
-            function logout() { currentUser = null; renderLogin(); }
-
-            function renderLogin() {
-                    document.getElementById('app').innerHTML = '<div class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"><div class="text-center mb-8"><div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4"><span class="material-icons text-white text-3xl">business</span></div><h1 class="text-2xl font-bold text-gray-800">Cohesity Service Portal</h1><p class="text-gray-500 mt-2">Sign in to access employee services</p></div><div class="space-y-4"><input id="email" type="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"><input id="password" type="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"><button onclick="login()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:opacity-90 transition">Sign In</button></div><p class="text-center text-sm text-gray-500 mt-6">Demo: demo@cohesity.com / password123</p></div></div>';
-            }
-
-            async function renderHome() {
-                    const { data: items } = await db.from('catalog_items').select('*, categories(name)').eq('is_active', true).limit(6);
-                    const { data: categories } = await db.from('categories').select('*').eq('is_active', true);
-                    document.getElementById('app').innerHTML = '<div class="min-h-screen bg-gray-50"><nav class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center"><div class="flex items-center space-x-3"><div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center"><span class="material-icons text-white">business</span></div><span class="text-xl font-bold text-gray-800">Cohesity Portal</span></div><div class="flex items-center space-x-4"><span class="text-gray-600">Welcome, ' + currentUser.name + '</span><button onclick="logout()" class="text-gray-500 hover:text-gray-700"><span class="material-icons">logout</span></button></div></div></nav><div class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-12"><div class="max-w-7xl mx-auto px-4 text-center"><h1 class="text-3xl font-bold mb-2">How can we help you today?</h1><p class="text-purple-100">Browse services or search for what you need</p></div></div><div class="max-w-7xl mx-auto px-4 py-8"><h2 class="text-xl font-semibold mb-4">Categories</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">' + (categories || []).map(c => '<div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer text-center"><span class="material-icons text-purple-600 text-3xl mb-2">' + (c.icon || 'folder') + '</span><p class="font-medium text-gray-800">' + c.name + '</p></div>').join('') + '</div><h2 class="text-xl font-semibold mb-4">Popular Services</h2><div class="grid md:grid-cols-3 gap-4">' + (items || []).map(i => '<div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition"><div class="flex items-start justify-between"><div><h3 class="font-semibold text-gray-800">' + i.name + '</h3><p class="text-sm text-gray-500<!DOCTYPE html>
-                      <html lang="en">
-                      <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Cohesity Service Portal</title>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <script src="https://cdn.tailwindcss.com"></script>
-      <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  </head>
-    <body class="bg-gray-50 min-h-screen">
-        <div id="app"></div>div>
-        <script>
-              const SUPABASE_URL = 'https://ghwsrqzarxuqfajugdta.supabase.co';
-              const SUPABASE_KEY = 'sb_publishable_7WwLwZAfl8H1FEkD3TJ-9A_3sbt7J4h';
-              const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-              let currentUser = null;
-
-              async function login() {
-                      const email = document.getElementById('email').value;
-                      const password = document.getElementById('password').value;
-                      const { data, error } = await db.from('users').select('*').eq('email', email).single();
-                      if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
-                      currentUser = data;
-                      renderHome();
-              }
-
-              function logout() { currentUser = null; renderLogin(); }
-
-              function renderLogin() {
-                      document.getElementById('app').innerHTML = '<div class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"><div class="text-center mb-8"><div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4"><span class="material-icons text-white text-3xl">business</span></div><h1 class="text-2xl font-bold text-gray-800">Cohesity Service Portal</h1><p class="text-gray-500 mt-2">Sign in to access employee services</p></div><div class="space-y-4"><input id="email" type="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"><input id="password" type="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"><button onclick="login()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-
-      </script>if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
+      if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
       currentUser = data;
       renderHome();
     }
