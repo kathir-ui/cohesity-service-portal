@@ -7,6 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <div id="app"></div>
@@ -15,32 +21,215 @@
     const SUPABASE_KEY = 'sb_publishable_7WwLwZAfl8H1FEkD3TJ-9A_3sbt7J4h';
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let currentUser = null;
+    let categories = [];
+    let catalogItems = [];
+    let myRequests = [];
+
+    async function init() { renderLogin(); }
 
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const { data, error } = await db.from('users').select('*').eq('email', email).single();
-      if (error || !data || data.password !== password) { alert('Invalid credentials'); return; }
+      if (error || !data || data.password !== password) {
+        alert('Invalid credentials. Please try again.');
+        return;
+      }
       currentUser = data;
-      renderHome();
+      await loadData();
+      renderApp();
     }
 
-    function logout() { currentUser = null; renderLogin(); }
+    function logout() {
+      currentUser = null;
+      categories = [];
+      catalogItems = [];
+      myRequests = [];
+      renderLogin();
+    }
+
+    async function loadData() {
+      const [catRes, itemRes, reqRes] = await Promise.all([
+        db.from('categories').select('*').eq('is_active', true).order('sort_order'),
+        db.from('catalog_items').select('*, categories(name, icon)').eq('is_active', true),
+        db.from('request_items').select('*, catalog_items(name, icon)').eq('requested_by', currentUser.id).order('created_at', { ascending: false })
+      ]);
+      categories = catRes.data || [];
+      catalogItems = itemRes.data || [];
+      myRequests = reqRes.data || [];
+    }
+
+    async function submitRequest(id) {
+      const item = catalogItems.find(i => i.id === id);
+      if (!item) return;
+
+      const { data, error } = await db.from('request_items').insert({
+        catalog_item_id: id,
+        requested_by: currentUser.id,
+        status: 'pending',
+        priority: 'medium'
+      }).select().single();
+
+      if (error) {
+        alert('Failed to submit request. Please try again.');
+        return;
+      }
+
+      myRequests.unshift({...data, catalog_items: item});
+      alert('Request "' + item.name + '" submitted successfully!');
+      renderApp();
+    }
 
     function renderLogin() {
-      document.getElementById('app').innerHTML = '<div class="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"><div class="text-center mb-8"><div class="w-16 h-16 bg-purple-600 rounded-full mx-auto flex items-center justify-center mb-4"><span class="material-icons text-white text-3xl">business</span></div><h1 class="text-2xl font-bold text-gray-800">Cohesity Service Portal</h1><p class="text-gray-500 mt-2">Employee Self-Service Center</p></div><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" value="demo@cohesity.com" class="w-full px-4 py-3 border rounded-lg"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Password</label><input type="password" id="password" value="password123" class="w-full px-4 py-3 border rounded-lg"></div><button onclick="login()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700">Sign In</button></div></div></div>';
+      document.getElementById('app').innerHTML = `
+        <div class="min-h-screen gradient-bg flex items-center justify-center p-4">
+          <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+              <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="material-icons text-white text-4xl">hub</span>
+              </div>
+              <h1 class="text-3xl font-bold text-gray-800">Cohesity Portal</h1>
+              <p class="text-gray-500 mt-2">AI-Powered Employee Services</p>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">email</span>
+                  <input type="email" id="email" value="demo@cohesity.com"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                    placeholder="Enter your email">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <div class="relative">
+                  <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                  <input type="password" id="password" value="password123"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                    placeholder="Enter your password">
+                </div>
+              </div>
+              <button onclick="login()"
+                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition shadow-lg shadow-purple-500/30">
+                Sign In
+              </button>
+            </div>
+            <div class="mt-6 p-4 bg-purple-50 rounded-xl">
+              <div class="flex items-center gap-2 text-purple-700 mb-2">
+                <span class="material-icons text-sm">smart_toy</span>
+                <span class="text-sm font-medium">AI-Powered Assistant</span>
+              </div>
+              <p class="text-xs text-purple-600">Get instant help with requests, find answers, and navigate services.</p>
+            </div>
+          </div>
+        </div>`;
     }
 
-    async function renderHome() {
-      const { data: items } = await db.from('catalog_items').select('*, categories(name)').eq('is_active', true).limit(6);
-      const { data: categories } = await db.from('categories').select('*').eq('is_active', true);
-      let catHtml = '';
-      (categories || []).forEach(function(cat) { catHtml += '<div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer"><span class="material-icons text-purple-600 text-3xl mb-2">' + (cat.icon || 'category') + '</span><h3 class="font-semibold text-gray-800">' + cat.name + '</h3><p class="text-sm text-gray-500 mt-1">' + (cat.description || '') + '</p></div>'; });
-      let itemsHtml = '';
-      (items || []).forEach(function(item) { itemsHtml += '<div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer"><div class="flex items-start space-x-4"><div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"><span class="material-icons text-purple-600">' + (item.icon || 'category') + '</span></div><div><h4 class="font-semibold text-gray-800">' + item.name + '</h4><p class="text-sm text-gray-500 mt-1">' + (item.short_description || '') + '</p><span class="inline-block mt-2 text-xs bg-gray-100 px-2 py-1 rounded">' + (item.categories ? item.categories.name : '') + '</span></div></div></div>'; });
-      document.getElementById('app').innerHTML = '<header class="bg-white shadow-sm sticky top-0 z-50"><div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between"><div class="flex items-center space-x-4"><div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center"><span class="material-icons text-white">business</span></div><span class="font-bold text-xl text-gray-800">Cohesity Service Portal</span></div><div class="flex items-center space-x-4"><span class="text-gray-600">Welcome, ' + currentUser.display_name + '</span><button onclick="logout()" class="bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200">Logout</button></div></div></header><main class="max-w-7xl mx-auto px-4 py-8"><h2 class="text-2xl font-bold text-gray-800 mb-6">Service Categories</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">' + catHtml + '</div><h2 class="text-2xl font-bold text-gray-800 mb-6">Popular Services</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' + itemsHtml + '</div></main>';
+    function renderApp() {
+      const firstName = currentUser.display_name ? currentUser.display_name.split(' ')[0] : 'User';
+      document.getElementById('app').innerHTML = `
+        <div class="min-h-screen bg-gray-50">
+          <header class="bg-white shadow-sm border-b px-6 py-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <span class="material-icons text-white">hub</span>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">Cohesity Service Portal</h1>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-gray-600">Welcome, ${currentUser.display_name}</span>
+                <button onclick="logout()" class="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Logout</button>
+              </div>
+            </div>
+          </header>
+
+          <main class="max-w-7xl mx-auto p-6">
+            <div class="gradient-bg rounded-2xl p-8 mb-8 text-white">
+              <h2 class="text-2xl font-bold mb-2">Welcome back, ${firstName}!</h2>
+              <p class="text-purple-100">How can we help you today? Browse our service catalog below.</p>
+            </div>
+
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Service Categories</h3>
+            <div class="grid grid-cols-4 gap-4 mb-8">
+              ${categories.map(cat => `
+                <div class="card-hover bg-white p-6 rounded-xl cursor-pointer">
+                  <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                    <span class="material-icons text-purple-600">${cat.icon || 'folder'}</span>
+                  </div>
+                  <h4 class="font-semibold text-gray-800">${cat.name}</h4>
+                  <p class="text-sm text-gray-500 mt-1">${cat.description || ''}</p>
+                </div>
+              `).join('')}
+            </div>
+
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Popular Services</h3>
+            <div class="grid grid-cols-3 gap-4 mb-8">
+              ${catalogItems.slice(0, 6).map(item => `
+                <div class="card-hover bg-white p-6 rounded-xl">
+                  <div class="flex items-start gap-4 mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span class="material-icons text-purple-600">${item.icon || 'description'}</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                      <p class="text-sm text-gray-500">${item.short_description || ''}</p>
+                      <span class="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${item.categories?.name || ''}</span>
+                    </div>
+                  </div>
+                  <button onclick="submitRequest('${item.id}')" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
+                    Request
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+
+            ${myRequests.length > 0 ? `
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">My Requests</h3>
+              <div class="bg-white rounded-xl overflow-hidden shadow-sm">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Request</th>
+                      <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                      <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    ${myRequests.map(req => `
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                              <span class="material-icons text-purple-600">${req.catalog_items?.icon || 'description'}</span>
+                            </div>
+                            <div>
+                              <p class="font-medium text-gray-800">${req.catalog_items?.name || 'Request'}</p>
+                              <p class="text-xs text-gray-500">ID: ${req.id ? req.id.slice(0, 8) : 'N/A'}...</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${req.created_at ? new Date(req.created_at).toLocaleDateString() : 'N/A'}</td>
+                        <td class="px-6 py-4">
+                          <span class="px-3 py-1 text-xs rounded-full ${
+                            req.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }">${req.status || 'pending'}</span>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+          </main>
+        </div>`;
     }
-    renderLogin();
+
+    init();
   </script>
 </body>
 </html>
